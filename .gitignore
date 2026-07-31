@@ -1,0 +1,4 @@
+# agent runtime state
+.mimocode/
+
+__pycache__/
