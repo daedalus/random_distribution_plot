@@ -1,4 +1,6 @@
+import hashlib
 import random
+import struct
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
@@ -282,3 +284,45 @@ plt.suptitle("Distributions from Python's random module", fontsize=14, y=1.01)
 plt.tight_layout()
 plt.savefig("random_all.png", dpi=150, bbox_inches="tight")
 print("Saved random_all.png")
+
+# ========== SHA256 limb distributions ==========
+N_sha = 50_000
+
+rand32 = [random.getrandbits(32) for _ in range(N_sha)]
+
+limbs_8 = []
+limbs_16 = []
+limbs_32 = []
+for val in rand32:
+    h = hashlib.sha256(struct.pack(">I", val)).digest()
+    for i in range(32):
+        limbs_8.append(h[i])
+    for i in range(0, 32, 2):
+        limbs_16.append(struct.unpack(">H", h[i:i+2])[0])
+    for i in range(0, 32, 4):
+        limbs_32.append(struct.unpack(">I", h[i:i+4])[0])
+
+fig2, axs2 = plt.subplots(1, 3, figsize=(16, 5))
+
+axs2[0].hist(limbs_8, bins=256, density=True, alpha=0.7, edgecolor="white", linewidth=0.3, color="steelblue")
+axs2[0].set_title("SHA256 8-bit limbs (32 per hash)", fontsize=10)
+axs2[0].set_xlabel("value (0–255)")
+axs2[0].set_ylabel("density")
+axs2[0].tick_params(labelsize=8)
+
+axs2[1].hist(limbs_16, bins=256, density=True, alpha=0.7, edgecolor="white", linewidth=0.3, color="coral")
+axs2[1].set_title("SHA256 16-bit limbs (16 per hash)", fontsize=10)
+axs2[1].set_xlabel("value (0–65535)")
+axs2[1].set_ylabel("density")
+axs2[1].tick_params(labelsize=8)
+
+axs2[2].hist(limbs_32, bins=256, density=True, alpha=0.7, edgecolor="white", linewidth=0.3, color="seagreen")
+axs2[2].set_title("SHA256 32-bit limbs (8 per hash)", fontsize=10)
+axs2[2].set_xlabel("value (0–4294967295)")
+axs2[2].set_ylabel("density")
+axs2[2].tick_params(labelsize=8)
+
+plt.suptitle("SHA256(random(32-bit)) limb distributions", fontsize=14)
+plt.tight_layout()
+plt.savefig("sha256_limbs.png", dpi=150, bbox_inches="tight")
+print("Saved sha256_limbs.png")
